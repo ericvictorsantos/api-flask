@@ -4,23 +4,27 @@ API Rest Mongo
 """
 
 from operator import itemgetter
+import os
 from flask import Flask, jsonify
 from pymongo import MongoClient
 from pandas import read_csv as pd_read_csv
-import os
 
-MONGO_CLIENT = MongoClient("mongodb://bigidea:bigidea@cluster0-shard-00-00-dlg8g.mongodb.net:27017,\
+CONN_STR = "mongodb://bigidea:bigidea@cluster0-shard-00-00-dlg8g.mongodb.net:27017,\
                           cluster0-shard-00-01-dlg8g.mongodb.net:27017,\
                           cluster0-shard-00-02-dlg8g.mongodb.net:27017/test?ssl=true&replicaSet=\
-                          Cluster0-shard-0&authSource=admin&retryWrites=true")
+                          Cluster0-shard-0&authSource=admin&retryWrites=true"
+
+MONGO_CLIENT = MongoClient(CONN_STR)
 
 APP = Flask(__name__)
+APP.config['JSON_SORT_KEYS'] = False
 
 URL_BASE = "http://dados.recife.pe.gov.br"
 RESOURCE = "/dataset/93273993-d92c-4162-8c4a-66c930590c31/resource"
 
-MESES = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio", 6: "Junho",
-         7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro", 11: "Novembro", 12: "Dezembro"}
+MESES = {1: "Janeiro", 2: "Fevereiro", 3: "Março", 4: "Abril", 5: "Maio",
+         6: "Junho", 7: "Julho", 8: "Agosto", 9: "Setembro", 10: "Outubro",
+         11: "Novembro", 12: "Dezembro"}
 
 @APP.route("/database_names")
 def database_names():
@@ -97,7 +101,8 @@ def pie_plot():
     #dataset.drop(columns=["_id"], inplace=True)
 
     #groupby_result = dataset.groupby("MES_DEMANDA").size()
-    groupby_result = dataset.groupby("ANO_DEMANDA").size().sort_values(ascending=False)
+    groupby_result = dataset.groupby("ANO_DEMANDA").size()\
+                     .sort_values(ascending=False)
 
     list_dict = list()
     for index, value in zip(groupby_result.index, groupby_result.values):
@@ -116,17 +121,18 @@ def bar_plot():
 
     dataset = get_dataset()
 
-    groupby_result = dataset.groupby("MES_DEMANDA").size().sort_values(ascending=False)
+    groupby_result = dataset.groupby("MES_DEMANDA").size()\
+                     .sort_values(ascending=False)
 
     list_dict = list()
     for index, value in zip(groupby_result.index, groupby_result.values):
-        list_dict.append({"_mes": index, "chamados": int(value)})
+        list_dict.append({"mes": index, "chamados": int(value)})
 
     # ordenandos os dados por ano
-    list_dict = sorted(list_dict, key=itemgetter("_mes"))
+    list_dict = sorted(list_dict, key=itemgetter("mes"))
 
     for index, value in enumerate(list_dict):
-        list_dict[index]["_mes"] = MESES[index + 1]
+        list_dict[index]["mes"] = MESES[index + 1]
 
     return jsonify(list_dict)
 
