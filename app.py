@@ -7,7 +7,7 @@ from operator import itemgetter
 from flask import Flask, jsonify
 from pymongo import MongoClient
 from pandas import read_csv as pd_read_csv
-from os import getenv as os_getenv
+import os
 
 MONGO_CLIENT = MongoClient("mongodb://bigidea:bigidea@cluster0-shard-00-00-dlg8g.mongodb.net:27017,\
                           cluster0-shard-00-01-dlg8g.mongodb.net:27017,\
@@ -151,5 +151,5 @@ def line_plot():
 
 
 if __name__ == "__main__":
-    PORT = os_getenv("PORT")
+    PORT = int(os.environ.get("PORT", 5000))
     APP.run(host="0.0.0.0", port=PORT)
